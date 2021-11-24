@@ -1,0 +1,194 @@
+--Dropping sequence
+DROP SEQUENCE sales_order_id_seq;
+DROP SEQUENCE sales_id_seq;
+DROP SEQUENCE offer_id_seq;
+
+
+---CREATE SEQUENCE FOR SALES_HEADER
+CREATE SEQUENCE sales_order_id_seq
+START WITH 100 INCREMENT BY 1;
+
+
+---CREATE SEQUENCE FOR SALES_DETAILS
+CREATE SEQUENCE sales_id_seq
+START WITH 10 INCREMENT BY 1;
+
+---CREATE SEQUENCE FOR Special_offer
+CREATE SEQUENCE offer_id_seq
+START WITH 1 INCREMENT BY 1;
+
+---Dropping Tables
+DROP TABLE product_sales_linking;
+DROP TABLE product_offer_linking;
+DROP TABLE SALES_DETAILS;
+DROP TABLE SALES_HEADER;
+DROP TABLE Special_offer;
+DROP TABLE CATEGORY;
+DROP TABLE DEPARTMENT;
+DROP TABLE STORE;
+
+
+---creating tables
+CREATE TABLE STORE (
+  Store_id       NUMBER NOT NULL  PRIMARY KEY,
+  location_id    NUMBER   NOT NULL,
+  store_status   CHAR(1) NOT NULL,
+  store_name     VARCHAR(30) NOT NULL UNIQUE,
+  store_phone    CHAR(12) NOT NULL,
+  address_line_1 VARCHAR(30),
+  address_line_2 VARCHAR(30),
+ 
+  CONSTRAINT    location_id_fk    FOREIGN KEY  (location_id)   REFERENCES LOCATION (location_id)
+ 
+);
+
+CREATE TABLE SALES_HEADER (
+  Sales_order_id    NUMBER      DEFAULT sales_order_id_seq.NEXTVAL   PRIMARY KEY,
+  Customer_id       NUMBER NOT NULL,
+  store_id          NUMBER NOT NULL,
+  total_qty         NUMBER NOT NULL,
+  date_of_purchase  DATE NOT NULL,
+  total_price_order NUMBER DEFAULT 0.00,
+  tax_amount        as (0.085 * total_price_order),
+  grand_total       as (total_price_order+(0.085 * total_price_order)),
+  status            Char(1) NOT NULL,
+  CONSTRAINT    Customer_id_fk   FOREIGN KEY (Customer_id)  REFERENCES Customers (Customer_id),
+  CONSTRAINT    store_id_fk   FOREIGN KEY (store_id)  REFERENCES Store (store_id),
+  CONSTRAINT    status_check  CHECK (STATUS IN ('R','P'))
+ 
+ ); 
+ 
+ CREATE TABLE Special_offer (
+  Offer_id          NUMBER     DEFAULT offer_id_seq.NEXTVAL   PRIMARY KEY,
+  product_id        NUMBER NOT NULL,
+  discount_rate     NUMBER NOT NULL,
+  start_date        DATE DEFAULT SYSDATE,   
+  end_date          DATE DEFAULT (SYSDATE+90),
+  offer_status      Char(1),
+ 
+  CONSTRAINT    product_offer_id_fk   FOREIGN KEY (product_id)  REFERENCES Product_detail (product_id),
+  CONSTRAINT    offer_status_check  CHECK (offer_status IN ('A','I'))
+ 
+ ); 
+ 
+
+CREATE TABLE SALES_DETAILS (
+  Sales_id          NUMBER     DEFAULT sales_id_seq.NEXTVAL   PRIMARY KEY,
+  Sales_order_id    NUMBER  NOT NULL,
+  product_id        NUMBER NOT NULL,
+  offer_id          NUMBER ,
+  product_qty       NUMBER NOT NULL,
+  unit_price        NUMBER NOT NULL,
+  discount_rate     NUMBER DEFAULT 0.00,
+  discounted_price  as ((discount_rate/100)*unit_price),
+  total_price       as ((product_qty * unit_price)-((discount_rate/100)*unit_price)),
+  CONSTRAINT    Sales_order_id_fk   FOREIGN KEY (Sales_order_id)  REFERENCES SALES_HEADER (Sales_order_id),
+  CONSTRAINT    product_id_fk   FOREIGN KEY (product_id)  REFERENCES Product_detail (product_id),
+  CONSTRAINT    offer_id_fk   FOREIGN KEY (offer_id)  REFERENCES Special_offer (offer_id)
+
+ 
+ ); 
+
+
+
+CREATE TABLE product_sales_linking (
+  product_id     NUMBER NOT NULL,
+  Sales_id       NUMBER NOT NULL,
+  CONSTRAINT    product_sales_pk   PRIMARY KEY (product_id, Sales_id),
+  CONSTRAINT    product_linking_id_fk1     FOREIGN KEY (product_id)  REFERENCES Product_detail (product_id),
+  CONSTRAINT    Sales_linking_id_fk2      FOREIGN KEY (Sales_id)   REFERENCES SALES_DETAILS (Sales_id)
+);
+
+
+CREATE TABLE product_offer_linking (
+  product_id     NUMBER NOT NULL,
+  Offer_id       NUMBER NOT NULL,
+  CONSTRAINT    product_offer_pk   PRIMARY KEY (product_id, Offer_id),
+  CONSTRAINT    product_offer_id_fk1     FOREIGN KEY (product_id)  REFERENCES Product_detail (product_id),
+  CONSTRAINT    offer_linking_id_fk2      FOREIGN KEY (offer_id)   REFERENCES Special_offer (Offer_id)
+);
+
+
+
+CREATE TABLE DEPARTMENT (
+  department_id   NUMBER  NOT NULL PRIMARY KEY,
+  department_name VARCHAR(30) NOT NULL UNIQUE
+);
+
+CREATE TABLE CATEGORY (
+  category_id     NUMBER  NOT NULL PRIMARY KEY,
+  department_id   NUMBER  NOT NULL ,
+  category_name   VARCHAR(30) NOT NULL UNIQUE,
+  CONSTRAINT    department_id_fk     FOREIGN KEY (department_id)   REFERENCES DEPARTMENT (department_id)
+);
+
+
+
+---Insert statements.Dummy data seeded for location, product_details & customers
+
+---STORE
+
+insert into store(Store_id ,location_id,store_status,store_name,store_phone,address_line_1) values (200,1,'A','MART',120,'abcg1');
+insert into store(Store_id ,location_id,store_status,store_name,store_phone,address_line_1 ) values (201,2,'A','MARTJ',120,'abcg2');
+insert into store(Store_id ,location_id,store_status,store_name,store_phone,address_line_1 ,address_line_2) values (202,3,'I','MARTL',120,'abcg1','561');
+
+
+--SALES_HEADER
+insert into sales_header (SALES_ORDER_ID,CUSTOMER_ID,STORE_ID,TOTAL_QTY,DATE_OF_PURCHASE,STATUS) values(101,10,200,5,sysdate,'P');
+insert into sales_header (SALES_ORDER_ID,CUSTOMER_ID,STORE_ID,TOTAL_QTY,DATE_OF_PURCHASE,STATUS) values(102,10,200,6,sysdate,'P');
+insert into sales_header (SALES_ORDER_ID,CUSTOMER_ID,STORE_ID,TOTAL_QTY,DATE_OF_PURCHASE,STATUS) values(103,20,201,9,sysdate,'R');
+insert into sales_header (SALES_ORDER_ID,CUSTOMER_ID,STORE_ID,TOTAL_QTY,DATE_OF_PURCHASE,STATUS) values(104,20,202,11.2,sysdate,'P');
+insert into sales_header (SALES_ORDER_ID,CUSTOMER_ID,STORE_ID,TOTAL_QTY,DATE_OF_PURCHASE,STATUS) values(105,30,202,2,sysdate,'R');
+
+--Run update for total_price_order
+
+
+
+---Special_offer
+insert into Special_offer (Offer_id ,product_id ,discount_rate ,start_date ,end_date ,offer_status)values (11,300,4.5,sysdate,sysdate+20,'A');
+insert into Special_offer (Offer_id ,product_id ,discount_rate ,start_date,offer_status)values (12,400,10,sysdate,'A');
+ 
+---SALES_DETAILS
+
+insert into SALES_DETAILS (Sales_id ,Sales_order_id,product_id ,offer_id,product_qty,unit_price,discount_rate) values (25,101,300,11,5,10,4.5);
+insert into SALES_DETAILS (Sales_id ,Sales_order_id,product_id ,offer_id,product_qty,unit_price,discount_rate) values (26,101,400,12,6,9,10);
+insert into SALES_DETAILS (Sales_id ,Sales_order_id,product_id ,product_qty,unit_price) values (27,102,401,5,10);
+
+
+---product_sales_linking
+
+insert into product_sales_linking (product_id,Sales_id) values (300,25);
+insert into product_sales_linking (product_id,Sales_id) values (400,26);
+insert into product_sales_linking (product_id,Sales_id) values (401,27);
+
+
+---product_offer_linking
+
+insert into product_offer_linking ( product_id,Offer_id) values (300,11);
+insert into product_offer_linking ( product_id,Offer_id) values (400,12);   
+
+
+--DEPARTMENT
+
+insert into DEPARTMENT (department_id,department_name) values (110,'frozen food');
+insert into DEPARTMENT (department_id,department_name) values (111,'Home and Outdoor'); 
+
+--CATEGORY
+insert into CATEGORY (category_id,department_id,category_name ) values (210,110,'veggies');
+insert into CATEGORY (category_id,department_id,category_name ) values (211,110,'nuggets');
+insert into CATEGORY (category_id,department_id,category_name ) values (212,111,'kitchen');
+
+--Update statments for total_price in sales_header
+
+
+UPDATE sales_header h 
+SET h.total_price_order  = 
+ (
+   SELECT  SUM(total_price) as sum_val
+   FROM SALES_DETAILS d
+  where  h.Sales_order_id = d.Sales_order_id );
+
+
+--tax_amount & grand_total will in sales_header automatically get updated once total_price_order has been updated
+
+
