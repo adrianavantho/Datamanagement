@@ -1,0 +1,71 @@
+--Dropping sequence
+DROP SEQUENCE vendor_id_seq;
+DROP SEQUENCE product_id_seq;
+DROP SEQUENCE inventory_id_seq;
+
+
+---CREATE SEQUENCE FOR VENDOR
+CREATE SEQUENCE vendor_id_seq
+START WITH 10 INCREMENT BY 1;
+
+
+---CREATE SEQUENCE FOR PRODUCT_DETAIL
+CREATE SEQUENCE product_id_seq
+START WITH 1000 INCREMENT BY 1;
+
+---CREATE SEQUENCE FOR INVENTORY_MAIN
+CREATE SEQUENCE inventory_id_seq
+START WITH 100 INCREMENT BY 1;
+
+
+-------------------------
+----DROP STATEMENTS
+---------------------------
+
+--drops for tables
+DROP TABLE vendor;
+DROP TABLE product_detail;
+DROP TABLE inventory_main;
+
+-------creates for tables
+CREATE TABLE vendor (
+  vendor_id                 NUMBER   PRIMARY KEY NOT NULL,
+  vendor_Name               VARCHAR(50) NOT NULL UNIQUE,
+  account_number            CHAR(30),
+  credit_rating             NUMBER(5),
+  vendor_address            VARCHAR(50) NOT NULL,
+  vendor_city               VARCHAR(30) NOT NULL,
+  vendor_state              VARCHAR(2),
+  vendor_Zip                VARCHAR(5),
+  vendor_phone              CHAR(12) NOT NULL,
+  web_url                   VARCHAR(30),
+  description               VARCHAR(500),
+  vendor_contact_first_name VARCHAR(30),
+  vendor_contact_last_name  VARCHAR(30)
+);
+
+CREATE TABLE product_detail (
+  product_id         NUMBER  PRIMARY KEY,
+  category_id        NUMBER  NOT NULL,
+  vendor_id          NUMBER  NOT NULL,
+  warehouse_id       NUMBER  NOT NULL,
+  barcode_num        NUMBER,
+  product_status     CHAR,
+  unit_sales_price   FLOAT,
+  unit_cost_price    FLOAT,
+  color              VARCHAR,
+  size               VARCHAR,
+  description        VARCHAR,
+  CONSTRAINT    category_id_fk1     FOREIGN KEY (category_id)  REFERENCES category (category_id),
+  CONSTRAINT    vendor_id_fk2       FOREIGN KEY (vendor_id)   REFERENCES vendor (vendor_id),
+  CONSTRAINT    warehouse_id_fk3    FOREIGN KEY (warehouse_id)   REFERENCES warehouse (warehouse_id)
+ 
+ ); 
+ 
+CREATE TABLE inventory_main(
+  inventory_id     NUMBER PRIMARY KEY  NOT NULL,
+  store_id         NUMBER  NOT NULL,  
+  department_id    NUMBER  NOT NULL,
+  CONSTRAINT    store_id_fk1            FOREIGN KEY (store_id)  REFERENCES store (store_id),
+  CONSTRAINT    department_id_fk2       FOREIGN KEY (department_id)   REFERENCES warehouse (department_id)
+); 
